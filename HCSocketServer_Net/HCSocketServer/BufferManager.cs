@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace HCSocketServer
@@ -72,6 +73,17 @@ namespace HCSocketServer
                 m_currentIndex += m_bufferSize;
             }
             return true;
+        }
+
+        /// <summary>
+        /// 修改缓冲区中buffer的指定内容
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        public void WriteBuffer(byte[] data, int offset, int count)
+        {
+            Array.Copy(data, 0, m_buffer, offset, count);
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using HCSocketServer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -22,6 +23,8 @@ namespace Sample
     /// </summary>
     public partial class MainWindow : Window
     {
+        HCServer m_server;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -34,9 +37,15 @@ namespace Sample
         /// <param name="e"></param>
         private void OnClickeStartServerBtn(object sender, RoutedEventArgs e)
         {
-            HCServer server = new HCServer(10, 200);
-            server.Init();
-            server.Start(new System.Net.IPEndPoint(IPAddress.Any, 3237));
+            m_server = new HCServer(10, 200, 200);
+            m_server.Init();
+            m_server.Start(new System.Net.IPEndPoint(IPAddress.Any, 3237));
+            m_server.ClientDataState += Server_ClientDataState;
+        }
+
+        private void Server_ClientDataState(HCSocketServer.Common.Enmu.HCDataStateEnmu state, HCClient client, HCSocketServer.Message.HCMessage message)
+        {
+            Trace.WriteLine("---------------------------");
         }
     }
 }

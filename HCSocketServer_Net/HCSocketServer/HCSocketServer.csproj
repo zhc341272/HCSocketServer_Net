@@ -43,11 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncUserToken.cs" />
+    <Compile Include="HCClient.cs" />
     <Compile Include="BufferManager.cs" />
+    <Compile Include="Common\Enmu\HCClientConnectStateEnmu.cs" />
+    <Compile Include="Common\Enmu\HCDataStateEnmu.cs" />
+    <Compile Include="Common\Enmu\HCServerStartStateEnmu.cs" />
     <Compile Include="HCServer.cs" />
+    <Compile Include="Interface\IClientEvents.cs" />
+    <Compile Include="Interface\IServerEvents.cs" />
+    <Compile Include="Message\HCMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketAsyncEventArgsPool.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
