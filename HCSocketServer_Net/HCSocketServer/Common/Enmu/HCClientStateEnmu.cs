@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace HCSocketServer.Common.Enmu
 {
     /// <summary>
-    /// 服务器启动状态枚举
+    /// 客户端启动状态枚举
     /// </summary>
-    public enum HCServerStartStateEnmu
+    public enum HCClientStateEnmu
     {
         /// <summary>
         /// 启动成功

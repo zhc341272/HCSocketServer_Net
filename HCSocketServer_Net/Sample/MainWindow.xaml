@@ -7,7 +7,17 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button Content="Button" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="OnClickeStartServerBtn"/>
-
+        <Button Content="启动服务器" HorizontalAlignment="Left" Margin="701,368,0,0" VerticalAlignment="Top" Width="81" Click="OnClickeStartServerBtn" Height="41"/>
+        <ListView Name="m_clientlist" HorizontalAlignment="Left" Height="353" Margin="10,10,0,0" VerticalAlignment="Top" Width="772">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="序号" Width="50" DisplayMemberBinding="{Binding id}"/>
+                    <GridViewColumn Header="ip" Width="200" DisplayMemberBinding="{Binding ip}"/>
+                    <GridViewColumn Header="ClintID" Width="200" DisplayMemberBinding="{Binding clientid}"/>
+                    <GridViewColumn Header="Message" Width="200" DisplayMemberBinding="{Binding message}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button Content="统一发送消息" HorizontalAlignment="Left" Margin="617,368,0,0" VerticalAlignment="Top" Width="75" Height="41" Click="Button_Click"/>
     </Grid>
 </Window>

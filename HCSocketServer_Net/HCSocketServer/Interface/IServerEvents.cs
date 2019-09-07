@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace HCSocketServer.Interface
 {
-    public delegate void HCServerStateDelegate(HCServerStartStateEnmu state, String msg);
-    public delegate void HCClientStateDelegate(HCClientConnectStateEnmu state, SocketAsyncEventArgs client);
+    public delegate void HCServerStateDelegate(HCServerStateEnmu state, string msg);
+    public delegate void HCClientStateDelegate(HCClientConnectStateEnmu state, HCClient client);
 
     /// <summary>
     /// 服务器通用事件接口

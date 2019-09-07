@@ -43,13 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\Enmu\HCClientStateEnmu.cs" />
     <Compile Include="HCClient.cs" />
     <Compile Include="BufferManager.cs" />
     <Compile Include="Common\Enmu\HCClientConnectStateEnmu.cs" />
     <Compile Include="Common\Enmu\HCDataStateEnmu.cs" />
-    <Compile Include="Common\Enmu\HCServerStartStateEnmu.cs" />
+    <Compile Include="Common\Enmu\HCServerStateEnmu.cs" />
     <Compile Include="HCServer.cs" />
+    <Compile Include="Interface\IClient.cs" />
     <Compile Include="Interface\IClientEvents.cs" />
+    <Compile Include="Interface\IServer.cs" />
     <Compile Include="Interface\IServerEvents.cs" />
     <Compile Include="Message\HCMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

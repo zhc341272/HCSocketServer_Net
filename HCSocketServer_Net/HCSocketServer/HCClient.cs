@@ -13,12 +13,12 @@ using System.Threading;
 
 namespace HCSocketServer
 {
-    public class HCClient : IClientEvents
+    public class HCClient : IClient
     {
         /// <summary>
         /// 客户端的标识信息
         /// </summary>
-        public String ClientID { get; set; }
+        public string ClientID { get; set; }
         /// <summary>  
         /// 通信SOKET  
         /// </summary>  
@@ -26,7 +26,7 @@ namespace HCSocketServer
         /// <summary>  
         /// 连接时间  
         /// </summary>  
-        public DateTime ConnectTime { get; set; }
+        internal DateTime LastHeart { get; set; }
         /// <summary>
         /// 解析半包数据的缓冲
         /// </summary>
@@ -52,44 +52,79 @@ namespace HCSocketServer
         }
 
         /// <summary>
-        /// 添加接收数据
+        /// 解析接收到的数据
         /// </summary>
         /// <param name="data"></param>
-        internal void AddReceiveData(byte[] data)
+        public void AnalysisData(byte[] data)
+        {
+            try
+            {           
+                if (data.Length < 4)
+                {
+                    if (datacache.Count + data.Length < 4)
+                    {//缓冲区与新添加的数据不够4个字节
+                        datacache.AddRange(data);
+                        return;
+                    }
+                }
+
+                if (datacache.Count == 0)
+                {//缓冲区没有数，需要处理的数据是带包头的
+                    byte[] datalength = new byte[4];//获取包头
+                    Array.Copy(data, 0, datalength, 0, datalength.Length);
+                    Array.Reverse(datalength);//倒转数据
+                    uint packagelength = BitConverter.ToUInt32(datalength, 0);//读取到包的长度
+
+                    if (packagelength == (data.Length - 4))
+                    {//恰好一个数据包
+                        byte[] msgdata = new byte[packagelength];
+                        Array.Copy(data, 4, msgdata, 0, msgdata.Length);
+                        ClientDataState?.Invoke(HCDataStateEnmu.Received, this, new HCMessage(ClientID, msgdata));
+                    }
+                    else if (packagelength < (data.Length - 4))
+                    {//粘包情况
+                        byte[] msgdata = new byte[packagelength];
+                        Array.Copy(data, 4, msgdata, 0, msgdata.Length);
+                        ClientDataState?.Invoke(HCDataStateEnmu.Received, this, new HCMessage(ClientID, msgdata));
+
+                        byte[] datacontinue = new byte[data.Length - packagelength - 4];
+                        Array.Copy(data, packagelength + 4, datacontinue, 0, datacontinue.Length);
+                        AnalysisData(datacontinue);
+                    }
+                    else
+                    {//半包情况
+                        datacache.AddRange(data);
+                        if (packagelength <= datacache.Count - 4)
+                        {//缓冲区中数据可形成整包
+                            byte[] datacontinue = datacache.ToArray();
+                            datacache.Clear();
+                            AnalysisData(datacontinue);
+                        }
+                    }
+                }
+                else
+                {//缓冲区有数据，接收到的数据是没有包头的
+                    datacache.AddRange(data);
+                    byte[] datacontinue = datacache.ToArray();
+                    datacache.Clear();
+                    AnalysisData(datacontinue);
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 清除缓冲区数据
+        /// </summary>
+        public void ClearCache()
         {
             try
             {
-                byte[] datalength = new byte[4];
-                Array.Copy(data, 0, datalength, 0, datalength.Length);
-                Array.Reverse(datalength);//倒转数据
-                uint temp = BitConverter.ToUInt32(datalength, 0);//读取到包的长度
-
-                if (temp == (data.Length - 4))
-                {//恰好一个数据包
-                    byte[] msgdata = new byte[temp];
-                    Array.Copy(data, 4, msgdata, 0, msgdata.Length);
-                    ClientDataState?.Invoke(HCDataStateEnmu.Received, this, new HCMessage(ClientID, msgdata));
-                }
-                else if (temp < (data.Length - 4))
-                {//粘包情况
-                    byte[] msgdata = new byte[temp];
-                    Array.Copy(data, 4, msgdata, 0, msgdata.Length);
-                    ClientDataState?.Invoke(HCDataStateEnmu.Received, this, new HCMessage(ClientID, msgdata));
-
-                    byte[] datacontinue = new byte[data.Length - temp - 4];
-                    Array.Copy(data, temp + 4, datacontinue, 0, datacontinue.Length);
-                    AddReceiveData(datacontinue);
-                }
-                else
-                {//半包情况
-                    datacache.AddRange(data);
-                    if (temp <= datacache.Count)
-                    {//缓冲区中数据可形成整包
-                        byte[] datacontinue = datacache.ToArray();
-                        datacache.Clear();
-                        AddReceiveData(datacontinue);
-                    }
-                }
+                ClientID = "";
+                datacache.Clear();
             }
             catch (Exception)
             {
@@ -149,7 +184,6 @@ namespace HCSocketServer
                 }
                 catch (Exception)
                 {
-
                 }
             }
         }
