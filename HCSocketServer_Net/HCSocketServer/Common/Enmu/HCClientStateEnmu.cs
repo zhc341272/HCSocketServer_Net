@@ -12,13 +12,17 @@ namespace HCSocketServer.Common.Enmu
     public enum HCClientStateEnmu
     {
         /// <summary>
-        /// 启动成功
+        /// 客户端连接成功
         /// </summary>
-        Success,
+        Connected,
         /// <summary>
-        /// 启动失败
+        /// 客户端连接失败
         /// </summary>
         Failed,
+        /// <summary>
+        /// 客户端断开连接
+        /// </summary>
+        Disconnected,
         /// <summary>
         /// 运行异常
         /// </summary>

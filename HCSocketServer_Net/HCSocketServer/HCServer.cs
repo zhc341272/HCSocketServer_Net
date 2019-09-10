@@ -68,7 +68,6 @@ namespace HCSocketServer
         /// <param name="sendBufferSize">用于每个socket I/O操作发送的缓冲区大小</param>
         public HCServer(int numConnections, int receiveBufferSize, int wirteBufferSize)
         {
-            //m_totalBytesRead = 0;
             m_numConnectedSockets = 0;
             m_numConnections = numConnections;
 
@@ -102,6 +101,7 @@ namespace HCSocketServer
                     readEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
                     readEventArg.UserToken = new HCClient();
                     ((HCClient)readEventArg.UserToken).ClientDataState += HCServer_ClientDataState;
+                    ((HCClient)readEventArg.UserToken).ClientState += HCServer_ClientState;
 
                     //将缓冲池中的字节缓冲区分配给SocketAsyncEventArg对象
                     m_readBufferManager.SetBuffer(readEventArg);
@@ -114,6 +114,16 @@ namespace HCSocketServer
             {
                 ServerState?.Invoke(HCServerStateEnmu.Failed, e.Message);
             }
+        }
+
+        /// <summary>
+        /// 客户端运行状态
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="client"></param>
+        private void HCServer_ClientState(HCClientStateEnmu state, HCClient client)
+        {
+            
         }
 
         /// <summary>
@@ -132,8 +142,9 @@ namespace HCSocketServer
 
                 StartAccept(null);
 
-                //m_heartthread = new Thread(ServerHeart);
-                //m_heartthread.Start();
+                m_heartthread = new Thread(ServerHeart);
+                m_heartthread.IsBackground = true;
+                m_heartthread.Start();
             }
             catch (Exception e)
             {
@@ -146,8 +157,20 @@ namespace HCSocketServer
         /// </summary>
         private void ServerHeart()
         {
-            SendMsgToAllClient("ping");
-            Thread.Sleep(1000);
+            while (true)
+            {
+                try
+                {
+                    this.SendPing();
+                    Thread.Sleep(1000);
+                }
+                catch (Exception e)
+                {
+                    ServerState?.Invoke(HCServerStateEnmu.RunningException, e.Message);
+                }
+
+            }
+
         }
 
         /// <summary>
@@ -231,6 +254,8 @@ namespace HCSocketServer
                 SocketAsyncEventArgs readEventArgs = m_readPool.Pop();
                 ((HCClient)readEventArgs.UserToken).Socket = e.AcceptSocket;
                 ((HCClient)readEventArgs.UserToken).Socket.NoDelay = true;
+                ((HCClient)readEventArgs.UserToken).Socket.ReceiveBufferSize = 2147483647;
+                ((HCClient)readEventArgs.UserToken).Socket.SendBufferSize = 2147483647;
                 ((HCClient)readEventArgs.UserToken).ClientID = "";//重置ClientID
 
                 //将该连接对象填入连接池，此时该客户端还没有通用标识信息
@@ -257,7 +282,7 @@ namespace HCSocketServer
         /// </summary>
         /// <param name="state"></param>
         /// <param name="msg"></param>
-        private void HCServer_ClientDataState(HCDataStateEnmu state, HCClient client, HCMessage msg)
+        private void HCServer_ClientDataState(HCDataStateEnmu state, HCMessage msg)
         {
             try
             {
@@ -265,12 +290,13 @@ namespace HCSocketServer
                 {//没有客户端ID，解析ID
                     string[] info = msg.GetDataString().Split(new string[] { "/" }, StringSplitOptions.None);
                     string ver = info[0];//协议版本号
-                    client.ClientID = info[1];//客户端ID
-                    ClientState?.Invoke(HCClientConnectStateEnmu.Connected, client);//客户端连接成功（业务逻辑上成功）
+                    msg.ClientID = info[1];//客户端ID
+                    msg.HCClient.ClientID = info[1];//客户端ID
+                    ClientState?.Invoke(HCClientStateEnmu.Connected, msg.HCClient);//客户端连接成功（业务逻辑上成功）
                 }
                 else
                 {
-                    ClientDataState?.Invoke(state, client, msg);
+                    ClientDataState?.Invoke(state, msg);
                 }
             }
             catch (Exception e)
@@ -322,7 +348,7 @@ namespace HCSocketServer
                 if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
                 {
                     byte[] recdata = new byte[e.BytesTransferred];
-                    Array.Copy(e.Buffer, e.Offset, recdata, 0, e.BytesTransferred);
+                    Array.Copy(e.Buffer, e.Offset, recdata, 0, recdata.Length);
                     token.AnalysisData(recdata);
 
                     ContinueReceive(e);
@@ -344,7 +370,18 @@ namespace HCSocketServer
         /// <param name="e"></param>
         private void ProcessSend(SocketAsyncEventArgs e)
         {
-
+            try
+            {
+                if (e.SocketError == SocketError.Success)
+                {
+                    ((HCClient)e.UserToken).m_pingcount = 0;//重置该socket的心跳计数器
+                }
+            }
+            catch (Exception exp)
+            {
+                ServerState?.Invoke(HCServerStateEnmu.RunningException, exp.Message);
+            }
+  
         }
 
         /// <summary>
@@ -398,7 +435,7 @@ namespace HCSocketServer
                     {//客户端已经关闭
 
                     }
-                    ClientState?.Invoke(HCClientConnectStateEnmu.Disconnected, token);//客户端断开连接
+                    ClientState?.Invoke(HCClientStateEnmu.Disconnected, token);//客户端断开连接
                     token.Socket.Close();
                     token.ClearCache();
 
@@ -503,6 +540,24 @@ namespace HCSocketServer
                 foreach (SocketAsyncEventArgs item in m_clientPool)
                 {
                     ((HCClient)(item.UserToken)).Send(data);
+                }
+            }
+            catch (Exception e)
+            {
+                ServerState?.Invoke(HCServerStateEnmu.RunningException, e.Message);
+            }
+        }
+
+        /// <summary>
+        /// 发送心跳包
+        /// </summary>
+        public void SendPing()
+        {
+            try
+            {
+                foreach (SocketAsyncEventArgs item in m_clientPool)
+                {
+                    ((HCClient)(item.UserToken)).SendPing();
                 }
             }
             catch (Exception e)

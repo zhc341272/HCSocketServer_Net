@@ -46,7 +46,6 @@
     <Compile Include="Common\Enmu\HCClientStateEnmu.cs" />
     <Compile Include="HCClient.cs" />
     <Compile Include="BufferManager.cs" />
-    <Compile Include="Common\Enmu\HCClientConnectStateEnmu.cs" />
     <Compile Include="Common\Enmu\HCDataStateEnmu.cs" />
     <Compile Include="Common\Enmu\HCServerStateEnmu.cs" />
     <Compile Include="HCServer.cs" />

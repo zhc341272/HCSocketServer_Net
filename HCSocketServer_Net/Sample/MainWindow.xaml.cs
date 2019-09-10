@@ -1,4 +1,6 @@
 ﻿using HCSocketServer;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -53,7 +55,7 @@ namespace Sample
         /// <param name="e"></param>
         private void OnClickeStartServerBtn(object sender, RoutedEventArgs e)
         {
-            m_server = new HCServer(10, 20, 20);
+            m_server = new HCServer(70, 40960, 40960);
             m_server.Init();
             m_server.Start(new System.Net.IPEndPoint(IPAddress.Any, 3237));
             m_server.ClientDataState += Server_ClientDataState;
@@ -80,20 +82,20 @@ namespace Sample
             
         }
 
-        private void M_server_ClientState(HCSocketServer.Common.Enmu.HCClientConnectStateEnmu state, HCClient client)
+        private void M_server_ClientState(HCSocketServer.Common.Enmu.HCClientStateEnmu state, HCClient client)
         {
             switch (state)
             {
-                case HCSocketServer.Common.Enmu.HCClientConnectStateEnmu.Connected:
+                case HCSocketServer.Common.Enmu.HCClientStateEnmu.Connected:
                     m_clientlist.Dispatcher.Invoke(new Action(() =>
                     {
                         m_clientlistsource.Add(new ClientData(clientid, client.Socket.RemoteEndPoint.ToString(), client.ClientID));
                         clientid++;
                     }));              
                     break;
-                case HCSocketServer.Common.Enmu.HCClientConnectStateEnmu.Failed:
+                case HCSocketServer.Common.Enmu.HCClientStateEnmu.Failed:
                     break;
-                case HCSocketServer.Common.Enmu.HCClientConnectStateEnmu.Disconnected:
+                case HCSocketServer.Common.Enmu.HCClientStateEnmu.Disconnected:
                     m_clientlist.Dispatcher.Invoke(new Action(() =>
                     {
                         foreach (ClientData item in m_clientlistsource)
@@ -119,32 +121,56 @@ namespace Sample
             }
         }
 
-        private void Server_ClientDataState(HCSocketServer.Common.Enmu.HCDataStateEnmu state, HCClient client, HCSocketServer.Message.HCMessage message)
+        private void Server_ClientDataState(HCSocketServer.Common.Enmu.HCDataStateEnmu state, HCSocketServer.Message.HCMessage message)
         {
-            switch (state)
+            try
             {
-                case HCSocketServer.Common.Enmu.HCDataStateEnmu.SendSuccessed:
-                    Trace.WriteLine("2222SendSuccessed");
-                    break;
-                case HCSocketServer.Common.Enmu.HCDataStateEnmu.SendFailed:
-                    Trace.WriteLine("2222SendSuccessed");
-                    break;
-                case HCSocketServer.Common.Enmu.HCDataStateEnmu.Received:
-                    m_clientlist.Dispatcher.Invoke(new Action(() =>
-                    {
-                        foreach (ClientData item in m_clientlistsource)
+                //Trace.WriteLine(message.GetDataString()) ;
+
+                switch (state)
+                {
+                    case HCSocketServer.Common.Enmu.HCDataStateEnmu.SendSuccessed:
+                        Trace.WriteLine("2222SendSuccessed");
+                        break;
+                    case HCSocketServer.Common.Enmu.HCDataStateEnmu.SendFailed:
+                        Trace.WriteLine("2222SendSuccessed");
+                        break;
+                    case HCSocketServer.Common.Enmu.HCDataStateEnmu.Received:
+
+                        //JObject json = JObject.Parse(message.GetDataString());
+                        //if (json["code"].ToString().Equals("0"))
+                        //{//认真听讲
+                        //    JObject sendjson = new JObject { { "code", "0" }, { "data", "指令：认真听讲" }, { "sender", message.ClientID.ToString() } };
+                        //    m_server.SendMsgToAllClient(sendjson.ToString());
+                        //}
+                        //else if (json["code"].ToString().Equals("1"))
+                        //{//转发消息
+                        //    json["sender"] = message.ClientID.ToString();
+                        //    //JObject sendjson = new JObject { { "code", "1" }, { "data", "指令：转发消息" }, { "sender", client.ClientID.ToString() } };
+                        //    m_server.SendMsgToAllClient(json.ToString());
+                        //}
+
+                        m_clientlist.Dispatcher.Invoke(new Action(() =>
                         {
-                            if (item.clientid.Equals(client.ClientID))
+                            foreach (ClientData item in m_clientlistsource)
                             {
-                                item.message = message.GetDataString();
-                                break;
+                                if (item.clientid.Equals(message.ClientID))
+                                {
+                                    item.message = "接收到指令：" + DateTime.Now.ToString();
+                                    break;
+                                }
                             }
-                        }
-                    }));
-                    break;
-                default:
-                    break;
+                        }));
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("异常：" + e.Message.ToString()) ;
+            }
+            
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

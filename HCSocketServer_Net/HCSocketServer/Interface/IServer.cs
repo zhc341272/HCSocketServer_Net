@@ -16,5 +16,6 @@ namespace HCSocketServer.Interface
         void SendMsgByClientID(string clientid, string data);
         void SendMsgToAllClient(byte[] data);
         void SendMsgToAllClient(string data);
+        void SendPing();
     }
 }

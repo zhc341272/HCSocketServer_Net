@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace HCSocketServer.Message
@@ -16,13 +17,15 @@ namespace HCSocketServer.Message
         /// 客户端数据（byte）
         /// </summary>
         public byte[] Data { get; set; }
-
         /// <summary>
-        /// 构造函数
+        /// 客户端
         /// </summary>
-        public HCMessage(string clientid, byte[] data)
+        public HCClient HCClient { get; set; }
+
+        public HCMessage(HCClient client, byte[] data)
         {
-            ClientID = clientid;
+            HCClient = client;
+            ClientID = client.ClientID;
             Data = data;
         }
 

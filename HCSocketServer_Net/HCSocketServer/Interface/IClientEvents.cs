@@ -9,13 +9,18 @@ using System.Threading.Tasks;
 
 namespace HCSocketServer.Interface
 {
-    public delegate void HCClientDataStateDelegate(HCDataStateEnmu state, HCClient client, HCMessage message);
+    public delegate void HCClientDataStateDelegate(HCDataStateEnmu state, HCMessage message);
+    public delegate void HCClientStateDelegate(HCClientStateEnmu state, HCClient client);
 
     interface IClientEvents
     {
         /// <summary>
-        /// 服务器中关于客户端数据操作的状态
+        /// 客户端数据操作的状态
         /// </summary>
         event HCClientDataStateDelegate ClientDataState;
+        /// <summary>
+        /// 客户端运行的状态
+        /// </summary>
+        event HCClientStateDelegate ClientState;
     }
 }

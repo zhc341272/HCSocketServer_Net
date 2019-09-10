@@ -11,5 +11,6 @@ namespace HCSocketServer.Interface
         void AnalysisData(byte[] data);
         void Send(byte[] data);
         void Send(string data);
+        void SendPing();
     }
 }
